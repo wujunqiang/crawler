@@ -7,13 +7,14 @@ import (
 )
 
 var NameRE = regexp.MustCompile(`<h1 class="name">([^<]+)</h1>`)
-func ParserProfile(content []byte,name string) engine.Request{
-	profile :=modle.Profile{}
+
+func ParserProfile(content []byte, name string) engine.Request {
+	profile := modle.Profile{}
 	profile.Name = name
 
-	profile.Telephone = extractString(content,NameRE)
+	profile.Telephone = extractString(content, NameRE)
 
-	return
+	return engine.Request{}
 }
 
 func extractString(
