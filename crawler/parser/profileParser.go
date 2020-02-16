@@ -3,8 +3,9 @@ package parser
 import (
 	"crawler_company/crawler/config"
 	"crawler_company/crawler/engine"
-	"crawler_company/crawler/modle"
+	"fmt"
 	"regexp"
+	"time"
 )
 
 //电话
@@ -23,7 +24,7 @@ var AddressRE = regexp.MustCompile(`<td width="144px">注册地址</td><td colsp
 var LagerEntiyRE = regexp.MustCompile(`onclick="common.stopPropagation\(event\)">([^<]+)</a>`)
 
 //注册资本
-var ZCZB_RE = regexp.MustCompile(`<td width="144px">注册资本</td><td width="308px"><div title="[0-9]+万">([^<]+)</div>`)
+var ZCZB_RE = regexp.MustCompile(`<td width="144px">注册资本</td><td width="308px"><div title="[^"]+">([^<]+)</div>`)
 
 //经营状态
 var JYZT_RE = regexp.MustCompile(`<td width="150px">经营状态</td><td width="">([^<]+)<`)
@@ -57,67 +58,89 @@ var HZRQ_RE = regexp.MustCompile(`<td width="144px">核准日期</td><td
 var DJJG_RE = regexp.MustCompile(`<td width="150px">登记机关</td><td colspan="2">([^<]+)</td>`)
 
 //曾用名
-var OtherNameRE = regexp.MustCompile(`<td width="144px">曾用名</td><td width="308px">([^<]+)</td>`)
+var OtherNameRE = regexp.MustCompile(`<td width="144px">曾用名</td><td width="308px"><span>([^<]+)</span></td>`)
 
 //英文名称
 var EnglistNameRE = regexp.MustCompile(`<td width="150px">英文名称</td><td colspan="2">([^<]+)</td>`)
+
+//经营范围
+var BussinesRE = regexp.MustCompile(`<td width="144px">经营范围</td><td colspan="4"><span class="">([^<]+)</span></td>`)
 
 //ID
 var idUrlRe = regexp.MustCompile(
 	`https://www.tianyancha.com/company/([\d]+)`)
 
-func ParserProfile(content []byte, name string, url string) engine.ParseResult {
-	profile := modle.Profile{}
-	profile.Name = name
+func ParserProfile(content []byte, url string, name string) engine.ParseResult {
 
-	profile.Telephone = extractString(content, PhoneRE)
+	testurl := extractString(content, testUrlRe)
 
-	profile.EMail = extractString(content, MailRE)
+	result := engine.ParseResult{}
+	if testurl == "天眼查校验" {
+		fmt.Println("Profile Parser !天眼查校验")
+		engine.SetDuplicat(url)
+		time.Sleep(time.Duration(30) * time.Second)
+		result.Requests = append(
+			result.Requests, engine.Request{
+				Url:    url,
+				Parser: NewProfileParser(name),
+			})
+		return result
 
-	profile.WEB = extractString(content, WebRE)
+	} else {
 
-	profile.LagelEntiy = extractString(content, LagerEntiyRE)
+		profile := make([]string, 20)
+		profile[0] = name
 
-	profile.ADDRESS = extractString(content, AddressRE)
+		profile[1] = extractString(content, PhoneRE)
 
-	profile.ZCZB = extractString(content, ZCZB_RE)
+		profile[2] = extractString(content, MailRE)
 
-	profile.JYZT = extractString(content, JYZT_RE)
+		profile[3] = extractString(content, WebRE)
 
-	profile.CLSJ = extractString(content, CLSJ_RE)
+		profile[4] = extractString(content, LagerEntiyRE)
 
-	profile.SHXYDM = extractString(content, SHXYDM_RE)
+		profile[5] = extractString(content, AddressRE)
 
-	profile.GSZCH = extractString(content, GSZCH_RE)
+		profile[6] = extractString(content, ZCZB_RE)
 
-	profile.ZZJGDM = extractString(content, ZZJGDM_RE)
+		profile[7] = extractString(content, JYZT_RE)
 
-	profile.NSRSBH = extractString(content, NSRSBH_RE)
+		profile[8] = extractString(content, CLSJ_RE)
 
-	profile.CompanyType = extractString(content, CompanyType_RE)
+		profile[9] = extractString(content, SHXYDM_RE)
 
-	profile.CompanyHY = extractString(content, CompanyHY_RE)
+		profile[10] = extractString(content, GSZCH_RE)
 
-	profile.HZRQ = extractString(content, HZRQ_RE)
+		profile[11] = extractString(content, ZZJGDM_RE)
 
-	profile.DJJG = extractString(content, DJJG_RE)
+		profile[12] = extractString(content, NSRSBH_RE)
 
-	profile.EnglistName = extractString(content, EnglistNameRE)
+		profile[13] = extractString(content, CompanyType_RE)
 
-	profile.OtherName = extractString(content, OtherNameRE)
+		profile[14] = extractString(content, CompanyHY_RE)
 
-	result := engine.ParseResult{
-		Items: []engine.Item{
-			{
-				Url:  url,
-				Type: "tianyancha",
-				Id: extractString(
-					[]byte(url), idUrlRe),
-				Payload: profile,
+		profile[15] = extractString(content, HZRQ_RE)
+
+		profile[16] = extractString(content, DJJG_RE)
+
+		profile[17] = extractString(content, EnglistNameRE)
+
+		profile[18] = extractString(content, OtherNameRE)
+
+		profile[19] = extractString(content, BussinesRE)
+
+		result = engine.ParseResult{
+			Items: []engine.Item{
+				{
+					Url:  url,
+					Type: "tianyancha",
+					Id: extractString(
+						[]byte(url), idUrlRe),
+					Payload: profile,
+				},
 			},
-		},
+		}
 	}
-
 	return result
 }
 
@@ -126,6 +149,7 @@ func extractString(
 	match := re.FindSubmatch(contents)
 
 	if len(match) >= 2 {
+
 		return string(match[1])
 	} else {
 		return ""

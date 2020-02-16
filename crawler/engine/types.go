@@ -1,6 +1,8 @@
 package engine
 
-import "crawler_company/crawler/config"
+import (
+	"crawler_company/crawler/config"
+)
 
 type ParserFunc func(
 	contents []byte, url string) ParseResult
@@ -24,7 +26,7 @@ type Item struct {
 	Url     string
 	Type    string
 	Id      string
-	Payload interface{}
+	Payload []string
 }
 
 type NilParser struct{}

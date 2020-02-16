@@ -24,7 +24,7 @@ func (s SimpleEngine) Run(seeds ...Request) {
 		r := requests[0]
 		//移出一个request
 		requests = requests[1:]
-		log.Printf("Got Url: %s \n", r.Url)
+		//log.Printf("Got Url: %s \n", r.Url)
 		parseResult, e := Worker(r)
 		if e != nil {
 			continue

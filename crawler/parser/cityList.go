@@ -9,6 +9,8 @@ import (
 
 const cityListRe = `<a href="(https://www.tianyancha.com/search+[?][^"]*)+"[^>]*>([^<]+)</a>`
 
+var areaListRe = regexp.MustCompile(`<a class="item" href="(https://www.tianyancha.com/search?base=[a-z]+&amp;areaCode=[^"]+)" href-new-event="" event-name=[^<]+</a>`)
+
 func ParseCityList(content []byte, _ string) engine.ParseResult {
 
 	re := regexp.MustCompile(cityListRe)

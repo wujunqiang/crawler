@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -19,12 +20,19 @@ import (
  *通用网络请求器 返回请求的HTML页面
  *
  */
-
+//qps
 var (
 	rateLimiter = time.Tick(
-		time.Second * 2)
+		time.Second / 3)
 	verboseLogging = true
 )
+
+//随机sleep 实测无效
+func radomTime() time.Duration {
+	i := rand.Intn(3)
+	duration := time.Duration(i) * time.Second
+	return duration
+}
 
 func SetVerboseLogging() {
 	verboseLogging = true
@@ -35,18 +43,15 @@ func Fetch(url string) ([]byte, error) {
 	if verboseLogging {
 		log.Printf("Fetching url %s", url)
 	}
-	//获取URL页面
-	//resp, err := httpClient.Get(url)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//获取cookie
-	//cookies := engine.Cookies{}
 
 	resp, err := httpClient.GetDefClientDo(url)
 	if err != nil {
 		fmt.Errorf("wrong status code: %d",
-			resp.StatusCode)
+			err)
+
+		//fmt.Println("URL ：" + url)
+
+		return []byte{}, nil
 	}
 
 	defer resp.Body.Close()
@@ -56,8 +61,8 @@ func Fetch(url string) ([]byte, error) {
 			fmt.Errorf("wrong status code: %d",
 				resp.StatusCode)
 	}
-	//log.Printf("response Header : %s", resp.Header)
-	//log.Printf("response Header : %d", resp.)
+	//log.Printf("response Header : %s", resp.Body)
+	//log.Printf("response Header : %d", resp.Cookies())
 	//cookies := resp.Header.Get("Cookie")
 	//
 	//log.Printf("response code : %s", resp.Body)
@@ -67,9 +72,11 @@ func Fetch(url string) ([]byte, error) {
 	//}
 
 	bodyReader := bufio.NewReader(resp.Body)
+
 	e := determineEncoding(bodyReader)
 	utf8Reader := transform.NewReader(bodyReader,
 		e.NewDecoder())
+	//log.Printf("response Header : %s", utf8Reader)
 	return ioutil.ReadAll(utf8Reader)
 }
 

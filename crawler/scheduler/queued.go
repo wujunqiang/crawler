@@ -37,11 +37,12 @@ func (s *QueuedScheduler) Run() {
 				activeRequest = requestQ[0]
 
 			}
+
 			select {
-			case r := <-s.requestChan:
-				requestQ = append(requestQ, r)
 			case w := <-s.workerChan:
 				workerQ = append(workerQ, w)
+			case r := <-s.requestChan:
+				requestQ = append(requestQ, r)
 			case activeWorker <- activeRequest:
 				workerQ = workerQ[1:]
 				requestQ = requestQ[1:]

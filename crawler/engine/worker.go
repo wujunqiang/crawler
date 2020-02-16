@@ -14,6 +14,6 @@ func Worker(r Request) (ParseResult, error) {
 			r.Url, err)
 		return ParseResult{}, err
 	}
-
+	//log.Printf("\n%s", body)
 	return r.Parser.Parse(body, r.Url), nil
 }

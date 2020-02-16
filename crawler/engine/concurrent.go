@@ -1,10 +1,18 @@
 package engine
 
+import (
+	"fmt"
+	"log"
+
+	. "github.com/Unknwon/goconfig"
+)
+
 type ConcurrentEngine struct {
 	Scheduler        Scheduler
 	WorkerCount      int
 	ItemChan         chan Item
 	RequestProcessor Processor
+	Cgf              *ConfigFile
 }
 
 type Processor func(Request) (ParseResult, error)
@@ -51,6 +59,7 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 			e.Scheduler.Submit(request)
 		}
 	}
+
 }
 
 func (e *ConcurrentEngine) CreateWorker(
@@ -62,6 +71,7 @@ func (e *ConcurrentEngine) CreateWorker(
 			request := <-in
 			result, err := e.RequestProcessor(request)
 			if err != nil {
+				fmt.Printf("The crteat work is err : %v", err)
 				continue
 			}
 			out <- result
@@ -69,14 +79,21 @@ func (e *ConcurrentEngine) CreateWorker(
 	}()
 }
 
-var visitedUrls = make(map[string]bool)
+var VisitedUrls = make(map[string]bool)
 
 func isDuplicate(url string) bool {
-	if visitedUrls[url] {
+	log.Printf("duplicate vistiedUrl lens : %d", len(VisitedUrls))
+	if VisitedUrls[url] {
 		return true
 	}
 
-	visitedUrls[url] = true
+	VisitedUrls[url] = true
 	return false
+
+}
+
+//检查打码时，重置拦截网址为false
+func SetDuplicat(url string) {
+	VisitedUrls[url] = false
 
 }
